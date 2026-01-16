@@ -46,13 +46,76 @@
   </div>
 
   <script>
-    let audioContext;
-    let source;
-    let delayNode;
-    let gainNode;
-    let stream;
+    let audioContext = null;
+    let source = null;
+    let delayNode = null;
+    let gainNode = null;
+    let stream = null;
     let isRunning = false;
 
     const toggleButton = document.getElementById("toggle");
     const delaySlider = document.getElementById("delaySlider");
-    const volumeSlider = document.getElementById("
+    const volumeSlider = document.getElementById("volumeSlider");
+    const delayValue = document.getElementById("delayValue");
+    const volumeValue = document.getElementById("volumeValue");
+
+    delayValue.textContent = delaySlider.value;
+    volumeValue.textContent = volumeSlider.value;
+
+    delaySlider.oninput = () => {
+      const value = parseFloat(delaySlider.value);
+      delayValue.textContent = value.toFixed(1);
+      if (delayNode) {
+        delayNode.delayTime.value = value;
+      }
+    };
+
+    volumeSlider.oninput = () => {
+      const value = parseFloat(volumeSlider.value);
+      volumeValue.textContent = value;
+      if (gainNode) {
+        gainNode.gain.value = value / 100;
+      }
+    };
+
+    toggleButton.onclick = async () => {
+      if (!isRunning) {
+        // START
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        await audioContext.resume(); // 🔑 REQUIRED
+
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        source = audioContext.createMediaStreamSource(stream);
+        delayNode = audioContext.createDelay(5.0);
+        gainNode = audioContext.createGain();
+
+        delayNode.delayTime.value = parseFloat(delaySlider.value);
+        gainNode.gain.value = parseFloat(volumeSlider.value) / 100;
+
+        source.connect(delayNode);
+        delayNode.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        toggleButton.textContent = "Stop";
+        isRunning = true;
+      } else {
+        // STOP
+        stream.getTracks().forEach(track => track.stop());
+        await audioContext.close();
+
+        audioContext = null;
+        source = null;
+        delayNode = null;
+        gainNode = null;
+        stream = null;
+
+        toggleButton.textContent = "Start";
+        isRunning = false;
+      }
+    };
+  </script>
+
+</body>
+</html>
+
