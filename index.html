@@ -2,41 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>2-Second Audio Delay</title>
+  <title>Audio Delay Web App</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
-      margin-top: 50px;
+      margin-top: 40px;
+    }
+    .controls {
+      margin-top: 30px;
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+    }
+    input[type="range"] {
+      width: 300px;
     }
     button {
       font-size: 18px;
       padding: 10px 20px;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>🎧 2-Second Audio Delay</h1>
-  <p>Use headphones to avoid feedback.</p>
-  <button id="start">Start Listening</button>
+
+  <h1>🎧 Audio Delay Web App</h1>
+  <p><strong>Use headphones to avoid feedback.</strong></p>
+
+  <button id="toggle">Start</button>
+
+  <div class="controls">
+    <label>
+      🎚️ Delay Time: <span id="delayValue">2.0</span> seconds
+    </label>
+    <input type="range" id="delaySlider" min="0" max="5" step="0.1" value="2">
+
+    <label>
+      🔊 Volume: <span id="volumeValue">100</span>%
+    </label>
+    <input type="range" id="volumeSlider" min="0" max="100" step="1" value="100">
+  </div>
 
   <script>
-    const button = document.getElementById("start");
+    let audioContext;
+    let source;
+    let delayNode;
+    let gainNode;
+    let stream;
+    let isRunning = false;
 
-    button.onclick = async () => {
-      button.disabled = true;
-      button.textContent = "Listening…";
-
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      const source = audioContext.createMediaStreamSource(stream);
-      const delay = audioContext.createDelay(5.0);
-      delay.delayTime.value = 2.0;
-
-      source.connect(delay);
-      delay.connect(audioContext.destination);
-    };
-  </script>
-</body>
-</html>
+    const toggleButton = document.getElementById("toggle");
+    const delaySlider = document.getElementById("delaySlider");
+    const volumeSlider = document.getElementById("
